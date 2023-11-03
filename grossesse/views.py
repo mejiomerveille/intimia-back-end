@@ -2,6 +2,7 @@ from django.http import JsonResponse
 from grossesse.models import Grossesse
 from datetime import datetime
 from django.shortcuts import render, get_object_or_404,redirect
+from grossesse.serializer import GrossesseSerializer
 from user_module.models import CustomUser as User
 from grossesse.models import Grossesse
 from .forms import GrossesseForm
@@ -62,6 +63,16 @@ class RegisterGrossesseView(views.APIView):
                 return Response({'success': False, 'message': 'Grossesse déjà enregistrée'}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({'error': 'Invalid user'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    
+    def put(self, request, grossesse_id):
+        grossesse = get_object_or_404(Grossesse, id=grossesse_id, user_id=request.user.id)
+        form = GrossesseForm(request.data, instance=grossesse)
+        if form.is_valid():
+            form.save()  # This updates the existing `grossesse` instance
+            return Response({'success': True, 'message': 'Grossesse updated successfully'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'success': False, 'errors': form.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
 # reccuperer la semaine courantge de la grossesse
@@ -169,4 +180,14 @@ def grossesse_list(request):
         # grossesse = Grossesse.objects.all()
         return render(request, 'grossesse/list.html', {'grossesse': grossesse})
     return render(request,'chats/404.html')
+
+class GrossesseListView(views.APIView):
+    def get(self, request):
+        user = request.user
+        grossesse = Grossesse.objects.filter(user_id=user.id, is_active=True).first()
+        if grossesse is not None:
+            serializer = GrossesseSerializer(grossesse)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
 

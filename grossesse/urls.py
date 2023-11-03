@@ -7,6 +7,7 @@ urlpatterns = [
     path('semaine/', current_week, name='semaine'),
     path('',principal , name='principal'),
     path('list_grossesse/',grossesse_list , name='liste_grossesse'),
+    path('get-grossesse/', GrossesseListView.as_view(), name='get_grossesse'),
     path('record/', record_data, name='record_data'),
     path('data-list/', data_list, name='data_list'),
     path('edit-data/<int:pk>/',edit_data, name='edit_data'),
