@@ -10,6 +10,12 @@ from .models import WeightWoman
 from django.http import JsonResponse
 import json
 from django.core import serializers
+
+from rest_framework import views, status
+from rest_framework.response import Response
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 # enregistrer la grossesse
 
 def registerGrossesse(request):
@@ -33,6 +39,26 @@ def registerGrossesse(request):
         }
         return JsonResponse({'success':'affichage de la grossesse'})
     return JsonResponse({'success': False, 'message': 'Grossesse déjà enregistrée'})
+
+class RegisterGrossesseView(views.APIView):
+    def post(self, request):
+        user = User.objects.filter(id=request.user.id).first()
+        if user:
+            grossesse = Grossesse.objects.filter(user_id=user.id, is_active=True).first()
+            if not grossesse:
+                form = GrossesseForm(request.data)
+                if form.is_valid():
+                    grossesse = form.save(commit=False)
+                    grossesse.user_id = user
+                    grossesse.save()
+                    return Response({'success': True, 'date_accouchement': grossesse.end_date}, status=status.HTTP_200_OK)
+                else:
+                    return Response({'success': False, 'errors': form.errors}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response({'success': False, 'message': 'Grossesse déjà enregistrée'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'error': 'Invalid user'}, status=status.HTTP_400_BAD_REQUEST)
+
 
 # reccuperer la semaine courantge de la grossesse
  

@@ -3,6 +3,7 @@ from .views import *
 
 urlpatterns = [
     path('regis-grossesse/', registerGrossesse, name='regis_grossesse'),
+    path('register-grossesse/', RegisterGrossesseView.as_view(), name='register_grossesse'),
     path('semaine/', current_week, name='semaine'),
     path('',principal , name='principal'),
     path('list_grossesse/',grossesse_list , name='liste_grossesse'),
