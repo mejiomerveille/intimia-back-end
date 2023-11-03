@@ -13,6 +13,8 @@ from django.core import serializers
 
 from rest_framework import views, status
 from rest_framework.response import Response
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -41,6 +43,8 @@ def registerGrossesse(request):
     return JsonResponse({'success': False, 'message': 'Grossesse déjà enregistrée'})
 
 class RegisterGrossesseView(views.APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
     def post(self, request):
         user = User.objects.filter(id=request.user.id).first()
         if user:
