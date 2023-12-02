@@ -28,6 +28,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('user_module.urls')),
     path('api1/', include('grossesse.urls')),
+    path('api2/', include('blog.urls')),
 ]+static(settings.STATIC_URL,documenmt_root = settings.STATIC_ROOT)
 if settings.DEBUG:
     urlpatterns +=static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)

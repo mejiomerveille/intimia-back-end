@@ -1,11 +1,45 @@
 from django.shortcuts import get_object_or_404
+from rest_framework.response import Response
 from .models import Author, Category, CreateBlog, Comment
 from .forms import *
-from django.shortcuts import redirect, render
-from django.views.generic import ListView
 from rest_framework.response import Response
 from rest_framework import views, status
 from rest_framework.decorators import api_view
+from django.http import JsonResponse
+
+@api_view(['GET'])
+def getPostDetails(request, slug):
+    post = get_object_or_404(CreateBlog, slug=slug)
+    category = post.category  # Récupérer la catégorie associée au blog
+    category_data = {
+        "name": category.nom,
+        "slug": category.slug
+    }
+    response = {
+        "title": post.title,
+        "excerpt": post.intro,
+        "featuredImage": {
+            "url": post.image.url
+        },
+        "author": {
+            "name": post.author.nom,
+            "bio": post.author.bio,
+            "photo": {
+                "url": post.author.photo.url
+            }
+        },
+        "createdAt": post.date_added,
+        "slug": post.slug,
+        "content": {
+            "html": post.body
+        },
+        "category": category_data
+    }
+    return JsonResponse(response)
+
+
+
+
 
 @api_view(['GET'])
 def getPosts(request):
@@ -17,45 +51,45 @@ def getPosts(request):
             image_url2 = post.author.photo.url if post.image else None
             data['posts'].append({'title': post.title, 'content': post.intro, 
             'image': image_url, 'name':post.author.nom,'bio':post.author.bio,
-            'photo':image_url2,
-            'categorie':post.category.nom})
+            'photo':image_url2,'slug':post.slug,
+            'categorie':post.category.nom,'createdAt':post.date_added})
         return Response(data)
     return Response({'error': 'Erreur lors de la requête'}, status=400)
 
-
-
-def detailView(request, slug):
-    post = CreateBlog.objects.get(slug=slug)
-    comments = post.comments.all()
-    paragraphs = post.body.splitlines()
-    if request.method == 'POST':
-        form = BlogForm(request.POST)
-        if form.is_valid():
-            form.save(commit=False)
-            form.instance.post = post
-            form.save()
-            return redirect('detailView', slug=post.slug)
-    else:
-        form = BlogForm()
-
-    content = {
-        'article':post,
-        'comments':comments,
-        'form':form,
-        'paragraphs': paragraphs,
-
-    }
-    return render(request, 'blog/update.html', content)
-    
-
+   
+@api_view(['GET'])
 def getCategories(request):
-    return Category.objects.all()
+     if request.method == "GET":
+        category = Category.objects.all()
+        data = {'category': []}
+        for cat in category:
+            data['category'].append({'title': cat.nom,  'slug':cat.slug})
+        return Response(data)
+     return Response({'error': 'Erreur lors de la requête'}, status=400)
 
-def getPostDetails(request, slug):
-    return get_object_or_404(CreateBlog, slug=slug)
+@api_view(['GET'])
+def getSimilarPosts(request, categories, slug):
+    if request.method == "GET":
+        posts = CreateBlog.objects.exclude(slug=slug).filter(category__slug__in=categories)[:3]
+        return Response(posts.values())  
+    return Response('echec', status=400) 
 
-def getSimilarPosts(categories, slug):
-    return CreateBlog.objects.exclude(slug=slug).filter(category__slug__in=categories)[:3]
+
+@api_view(['GET'])
+def getRecentPosts(request):
+    if request.method == "GET":
+        posts = CreateBlog.objects.order_by('date_added').reverse()[:3]
+        return Response(posts.values())  # Renvoyer les données brutes du QuerySet
+    return Response('echec', status=400)  # Renvoyer une réponse avec un statut d'erreur approprié
+
+
+# def getPostDetails(request, slug):
+#     post = get_object_or_404(CreateBlog, slug=slug)
+#     # Faites d'autres opérations avec l'objet `post` si nécessaire
+
+#     # Retournez une réponse appropriée, par exemple :
+#     return HttpResponse(f"Details of post with slug '{slug}'")
+
 
 def getAdjacentPosts(createdAt, slug):
     next_post = CreateBlog.objects.filter(createdAt__gt=createdAt).exclude(slug=slug).order_by('createdAt').first()
@@ -78,7 +112,4 @@ def submitComment(obj):
 def getComments(slug):
     post = get_object_or_404(CreateBlog, slug=slug)
     return Comment.objects.filter(post=post)
-
-def getRecentPosts():
-    return CreateBlog.objects.order_by('date_added').reverse()[:3]
 

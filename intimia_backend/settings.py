@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'user_module',
     'grossesse',
+    'blog',
 
 ]
 
