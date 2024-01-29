@@ -1,43 +1,60 @@
-from rest_framework import views, status
+from rest_framework import views,status
+from .serializers import MyTokenObtainPairSerializer
+from rest_framework.permissions import AllowAny
+from rest_framework_simplejwt.views import TokenObtainPairView
+from .serializers import RegisterSerializer,ProfileSerializer
+from rest_framework import generics
+from .models import CustomUser as User
 from rest_framework.response import Response
-from rest_framework.authtoken.models import Token
-from rest_framework.authentication import TokenAuthentication
+from rest_framework.decorators import api_view,permission_classes
 from rest_framework.permissions import IsAuthenticated
-from django.contrib.auth import get_user_model, authenticate
-from .serializers import UserSerializer
 
-User = get_user_model()
 
-class RegisterView(views.APIView):
-    def post(self, request):
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()
-            return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-class LoginView(views.APIView):
-    def post(self, request):
-        username = request.data.get('username')
-        password = request.data.get('password')
-        user = authenticate(username=username, password=password)
-        if user is not None:
-            token, _ = Token.objects.get_or_create(user=user)
-            return Response({'token': token.key}, status=status.HTTP_200_OK)
-        return Response({'error': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class MyObtainTokenPairView(TokenObtainPairView):
+    permission_classes = (AllowAny,)
+    serializer_class = MyTokenObtainPairSerializer
+
+
+
+class RegisterView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    permission_classes = (AllowAny,)
+    serializer_class = RegisterSerializer
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def getProfile(request):
+    user = request.user
+    serializer = ProfileSerializer(user, many=False)
+    return Response(serializer.data)
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def updateProfile(request):
+    user = request.user
+    serializer = ProfileSerializer(user, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+    return Response(serializer.data)
+
 
 class LogoutView(views.APIView):
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated]
     def post(self, request):
+        print(RegisterSerializer(request.user))
         request.user.auth_token.delete()
         return Response({'detail': 'Logged out successfully.'}, status=status.HTTP_200_OK)
 
 
-# a protected view to return the authenticated user's details
-class CurrentUserView(views.APIView):
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated]
-    def get(self, request):
-        serializer = UserSerializer(request.user)
-        return Response(serializer.data)
+
+# #api/notes
+# @api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+# def getNotes(request):
+#     public_notes = Note.objects.filter(is_public=True).order_by('-updated')[:10]
+#     user_notes = request.user.notes.all().order_by('-updated')[:10]
+#     notes = public_notes | user_notes
+#     serializer = NoteSerializer(notes, many=True)
+#     return Response(serializer.data)

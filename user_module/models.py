@@ -6,6 +6,7 @@ from django.core.validators import EmailValidator
 
 class CustomUser(AbstractUser):
     email = models.EmailField(unique=True, validators=[EmailValidator()])
+    cover_photo = models.ImageField(upload_to='covers/', null=True, blank=True)
 
     def __str__(self) -> str:
         return self.username

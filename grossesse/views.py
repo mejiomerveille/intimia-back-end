@@ -1,12 +1,45 @@
 from django.http import JsonResponse
+from rest_framework import views,status
 from grossesse.models import Grossesse
+from rest_framework.response import Response
 from datetime import datetime
 from django.shortcuts import render, get_object_or_404,redirect
 from user_module.models import CustomUser as User
 from grossesse.models import Grossesse
 from .forms import GrossesseForm
 from django.http import JsonResponse
-# enregistrer la grossesse
+from django.shortcuts import render
+from .models import InfoGrossesse
+from django.views import View
+from .models import InfoGrossesse
+from rest_framework import views,status
+from rest_framework.permissions import AllowAny
+from rest_framework import generics
+from rest_framework.response import Response
+from .serializer import *
+
+class RegisterView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    permission_classes = (AllowAny,)
+    serializer_class = GrossesseSerializer
+
+class SemaineView(View):
+    def get(self, request, num_semaine):
+        try:
+            info_grossesse = InfoGrossesse.objects.get(semaine__num_semaine=num_semaine)
+            semaine_data = info_grossesse.semaine
+            return JsonResponse(semaine_data)
+        except InfoGrossesse.DoesNotExist:
+            return JsonResponse({"error": "Semaine not found"}, status=404)
+
+def current_week(request, current_week):
+    try:
+        info_grossesse = InfoGrossesse.objects.get(semaine__num_semaine=current_week)
+        semaine_data = info_grossesse.semaine
+        return JsonResponse(semaine_data)
+    except InfoGrossesse.DoesNotExist:
+        return JsonResponse({'message': 'Aucune donnée disponible pour cette semaine'})
+
 
 def registerGrossesse(self,request):
     grosse = Grossesse.objects.filter(user_id=request.user.id, is_active=True).first()
@@ -30,8 +63,6 @@ def registerGrossesse(self,request):
     return JsonResponse({'success': False, 'message': 'Grossesse déjà enregistrée'})
 
 class RegisterGrossesseView(views.APIView):
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated]
     def post(self, request):
         user = User.objects.filter(id=request.user.id).first()
         if user:
@@ -63,19 +94,19 @@ class RegisterGrossesseView(views.APIView):
 
 # reccuperer la semaine courantge de la grossesse
  
-def current_week(request):
-    # user: User = request.user
-    user_id : User= request.user.id
-    grossesse = Grossesse.objects.filter(user_id=1, is_active=True).first()
-    print(grossesse)    
-    if  grossesse:
-        start_date = grossesse.start_date
-        current_date = datetime.now().date()
-        weeks = (current_date - start_date).days // 7 +1
+# def current_week(request):
+#     # user: User = request.user
+#     user_id : User= request.user.id
+#     grossesse = Grossesse.objects.filter(user_id=1, is_active=True).first()
+#     print(grossesse)    
+#     if  grossesse:
+#         start_date = grossesse.start_date
+#         current_date = datetime.now().date()
+#         weeks = (current_date - start_date).days // 7 +1
         
-        return JsonResponse({'week': weeks})
+#         return JsonResponse({'week': weeks})
     
-    return JsonResponse({'week': None})
+#     return JsonResponse({'week': None})
 
 
 # Modifier une grossesse
@@ -96,48 +127,6 @@ def modifier_grossesse(request, grossesse_id):
         }
         return render(request, 'grossesse/modifier_grossesse.html', content,)
 
-    
-
-
-def record_data(request):
-    if request.method == 'POST':
-        form = PregnantWomanForm(request.POST)
-        if form.is_valid():
-            pregnant_woman = form.save(commit=False)
-            pregnant_woman.user = request.user
-            pregnant_woman.save()
-            return redirect('data_list')
-    else:
-        form = PregnantWomanForm()
-    return render(request, 'grossesse/record_data.html', {'form': form})
-
-def data_list(request):
-    data = WeightWoman.objects.filter(user=request.user).order_by('-date_created')
-    return render(request, 'grossesse/data_list.html', {'data': data})
-
-
-def edit_data(request, pk):
-    data = get_object_or_404(WeightWoman, pk=pk)
-    if request.method == 'POST':
-        form = PregnantWomanForm(request.POST, instance=data)
-        if form.is_valid():
-            form.save()
-            return redirect('data_list')
-    else:
-        form = PregnantWomanForm(instance=data)
-    return render(request, 'grossesse/edit_data.html', {'form': form})
-
-def delete_data(request, pk):
-    data = get_object_or_404(WeightWoman, pk=pk)
-    if request.method == 'POST':
-        data.delete()
-        return redirect('data_list')
-    return render(request, 'grossesse/delete_data.html', {'data': data})
-
-
-
-
-
 
 def principal(request):
     grosse: Grossesse = Grossesse.objects.filter(user_id=request.user.id, is_active=True).first()
@@ -157,8 +146,8 @@ def principal(request):
 
             return render(request, 'grossesse/cadre.html',{'n':list_weeks, 'start_week': date_diff })
     return render(request,'app/404.html')
-    
-    
+    # mervcodemerveille
+    # essai
 def grossesse_list(request):
     user: User = request.user
     grossesse: Grossesse = Grossesse.objects.filter(user_id=user.id, is_active=True).first()

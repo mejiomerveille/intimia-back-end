@@ -5,13 +5,17 @@ from user_module.models import CustomUser as User
 import datetime
 
 class InfoGrossesse(models.Model):
-    semaine = models.JSONField()
+    semaine = models.JSONField(primary_key=True)
+
+    def save(self, *args, **kwargs):
+        self.pk = self.semaine["num_semaine"]
+        super().save(*args, **kwargs)
 
 
 class Grossesse(models.Model):
     start_date = models.DateField()
     end_date = models.DateField(null=True, blank=True)
-    user_id=models.ForeignKey(User,on_delete=models.CASCADE)
+    user=models.ForeignKey(User,on_delete=models.CASCADE)
     is_active=models.BooleanField(default=True)
 
     def __str__(self):

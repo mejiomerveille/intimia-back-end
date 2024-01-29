@@ -6,7 +6,6 @@ class Author(models.Model):
     photo = models.ImageField(upload_to='media')
     bio =models.CharField(max_length=255)
 
-
 class Category(models.Model):
     nom =models.CharField(max_length=50)
     slug=models.SlugField(unique=True) 
@@ -17,11 +16,15 @@ class CreateBlog(models.Model):
     intro = models.TextField()
     body = models.TextField()
     image = models.ImageField(upload_to='media')
-    FeaturePost=models.BooleanField(default=True)
+    FeaturePost=models.BooleanField(default=True)# s'affiche sur le slide si vrai  
     date_added = models.DateTimeField(auto_now=True)
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    nombre_de_lectures = models.IntegerField(default=0)
 
+    def incrementer_lectures(self):
+        self.nombre_de_lectures += 1
+        self.save()
 
     def __str__(self):
         return self.title

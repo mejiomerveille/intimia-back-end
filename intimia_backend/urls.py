@@ -19,16 +19,17 @@ from django.urls import path,include
 from django.conf.urls.static import static
 from django.conf import settings
 from django.views.generic import TemplateView
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-)
+from rest_framework.routers import DefaultRouter
+router = DefaultRouter()
+# router.register(r'product', ProductViewSet, basename='Product')
+# router.register(r'image', ImageViewSet, basename='Image')
+# from reviews.views import ProductViewSet, ImageViewSet
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('user_module.urls')),
-    path('api1/', include('grossesse.urls')),
-    path('api2/', include('blog.urls')),
+    path('api/v1/user/', include('user_module.urls')),
+    path('api/v1/grossesse/', include('grossesse.urls')),
+    path('api/v1/blog/', include('blog.urls')),
 ]+static(settings.STATIC_URL,documenmt_root = settings.STATIC_ROOT)
 if settings.DEBUG:
     urlpatterns +=static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)
