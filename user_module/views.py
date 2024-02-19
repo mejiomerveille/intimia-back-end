@@ -10,8 +10,6 @@ from rest_framework.decorators import api_view,permission_classes
 from rest_framework.permissions import IsAuthenticated
 
 
-
-
 class MyObtainTokenPairView(TokenObtainPairView):
     permission_classes = (AllowAny,)
     serializer_class = MyTokenObtainPairSerializer
@@ -44,7 +42,7 @@ def updateProfile(request):
 class LogoutView(views.APIView):
     def post(self, request):
         print(RegisterSerializer(request.user))
-        request.user.auth_token.delete()
+        # request.user.auth_token.delete()
         return Response({'detail': 'Logged out successfully.'}, status=status.HTTP_200_OK)
 
 

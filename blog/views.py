@@ -61,7 +61,7 @@ def getPosts(request):
              'author':{
              'name':post.author.nom,'bio':post.author.bio,
             'photo':image_url2,},'slug':post.slug,
-            'categorie':post.category.nom,'createdAt':post.date_added})
+            'categorie':post.category.nom,'date_added':post.date_added})
         return JsonResponse(data)
     return Response({'error': 'Erreur lors de la requête'}, status=400)
 
@@ -80,9 +80,12 @@ def getCategories(request):
 @api_view(['GET'])
 def getSimilarPosts(request):
     if request.method == "GET":
+        # posts = CreateBlog.objects.filter(category=categories).values('category')
         categories = request.GET.getlist('categories')  
+        semaine=request.GET.get('semaine')
         slug = request.GET.get('slug')
-        
+        print(categories)
+        # print(posts)
         if categories and slug:
             posts = CreateBlog.objects.exclude(slug=slug).filter(category__slug__in=categories)[:3]
             return Response(posts.values())  
@@ -96,7 +99,6 @@ def getRecentPosts(request):
         posts = CreateBlog.objects.order_by('date_added').reverse()[:3]
         return Response(posts.values())  
     return Response('echec', status=400)  
-import time
 from datetime import timedelta
 
 def getAdjacentPosts(request,date_added:str):
@@ -126,7 +128,7 @@ def getFeaturedPosts(request):
             image_url2 = post.author.photo.url if post.image else None
             data['posts'].append({'title': post.title, 
             'image': image_url, 'name':post.author.nom,'bio':post.author.bio,
-            'photo':image_url2,'slug':post.slug,
+            'photo':image_url2,'slug':post.slug,'date':post.date_added,
             })
         return Response(data)
     return Response({'error': 'Erreur lors de la requête'}, status=400)

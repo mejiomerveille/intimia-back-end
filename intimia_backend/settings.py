@@ -29,6 +29,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = ['http://localhost:3000']
+CORS_COOKIE_SECURE=True
+CORS_COOKIE_HTTPONLY=True
+
 
 CORS_ORIGIN_ALLW_ALL = True
 
@@ -41,9 +44,11 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = ['*']
 
+
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -58,7 +63,11 @@ INSTALLED_APPS = [
     'user_module',
     'grossesse',
     'blog',
-
+    'rdv',
+    'forfait',
+    'notifications',
+    'channels',
+    'symptoms',
 ]
 
 SITE_ID = 1
@@ -104,6 +113,23 @@ TEMPLATES = [
     },
 ]
 
+from twilio.rest import Client
+
+TWILIO_ACCOUNT_SID = 'your_account_sid'
+TWILIO_AUTH_TOKEN = 'your_auth_token'
+TWILIO_PHONE_NUMBER = 'your_twilio_phone_number'
+
+# ...
+
+# Fonction utilitaire pour envoyer un SMS
+def send_sms(to, body):
+    client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+    message = client.messages.create(
+        body=body,
+        from_=TWILIO_PHONE_NUMBER,
+        to=to
+    )
+
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=180),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=50),
@@ -137,8 +163,18 @@ SIMPLE_JWT = {
 }
 
 
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
+}
+
 
 WSGI_APPLICATION = 'intimia_backend.wsgi.application'
+ASGI_APPLICATION = "intimia_backend.asgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
@@ -146,7 +182,7 @@ WSGI_APPLICATION = 'intimia_backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'intimia',
+        'NAME': 'INTIMIADB',
         'USER':'intimia_db',
         'PASSWORD': 'intimia_db',
         'HOST':'localhost',

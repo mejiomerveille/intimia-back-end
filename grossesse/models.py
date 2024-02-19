@@ -4,7 +4,7 @@ from django.db import models
 from user_module.models import CustomUser as User
 import datetime
 
-class InfoGrossesse(models.Model):
+class InformationGrossesse(models.Model):
     semaine = models.JSONField(primary_key=True)
 
     def save(self, *args, **kwargs):
@@ -17,6 +17,7 @@ class Grossesse(models.Model):
     end_date = models.DateField(null=True, blank=True)
     user=models.ForeignKey(User,on_delete=models.CASCADE)
     is_active=models.BooleanField(default=True)
+    is_finish=models.BooleanField(default=False)
 
     def __str__(self):
         return f"Grossesse {self.start_date} - {self.end_date}"

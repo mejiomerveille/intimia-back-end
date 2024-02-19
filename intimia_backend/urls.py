@@ -24,12 +24,18 @@ router = DefaultRouter()
 # router.register(r'product', ProductViewSet, basename='Product')
 # router.register(r'image', ImageViewSet, basename='Image')
 # from reviews.views import ProductViewSet, ImageViewSet
-
+# mervcodemerveille
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/user/', include('user_module.urls')),
     path('api/v1/grossesse/', include('grossesse.urls')),
     path('api/v1/blog/', include('blog.urls')),
+    path('api/v1/rdv/', include('rdv.urls')),
+    path('api/v1/symptoms/', include('symptoms.urls')),
+    path('api/v1/notifications/', include('notifications.urls')),
+
+
+
 ]+static(settings.STATIC_URL,documenmt_root = settings.STATIC_ROOT)
 if settings.DEBUG:
     urlpatterns +=static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)

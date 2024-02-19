@@ -20,11 +20,8 @@ class CreateBlog(models.Model):
     date_added = models.DateTimeField(auto_now=True)
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    nombre_de_lectures = models.IntegerField(default=0)
+    semaine = models.IntegerField(default=0)
 
-    def incrementer_lectures(self):
-        self.nombre_de_lectures += 1
-        self.save()
 
     def __str__(self):
         return self.title

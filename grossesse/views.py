@@ -9,19 +9,39 @@ from grossesse.models import Grossesse
 from .forms import GrossesseForm
 from django.http import JsonResponse
 from django.shortcuts import render
-from .models import InfoGrossesse
+from .models import InformationGrossesse as InfoGrossesse
 from django.views import View
-from .models import InfoGrossesse
-from rest_framework import views,status
+from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
-from rest_framework import generics
 from rest_framework.response import Response
 from .serializer import *
 
-class RegisterView(generics.CreateAPIView):
-    queryset = User.objects.all()
+class Grossesse(APIView):
     permission_classes = (AllowAny,)
-    serializer_class = GrossesseSerializer
+    # serializer_class = GrossesseSerializer
+    def post(self,request):
+            if request.method == 'POST':
+                form = GrossesseForm(request.data)
+                if form.is_valid():
+                    grossesse = form.save(commit=False)
+                    grossesse.user = request.user  
+                    grossesse.save()
+                    
+                    data ={
+                        ';essage':"grossesse enregistree avec succes", 
+                        'date_accouchement': grossesse.end_date
+                    }
+                    return JsonResponse(data)
+                else:
+                    print(form)
+            else:
+                form = GrossesseForm()
+            content = {
+                'user_id': request.user.id,
+                'form': form,
+            }
+            return JsonResponse('Une erreur est subvenue')
+
 
 class SemaineView(View):
     def get(self, request, num_semaine):
@@ -39,57 +59,6 @@ def current_week(request, current_week):
         return JsonResponse(semaine_data)
     except InfoGrossesse.DoesNotExist:
         return JsonResponse({'message': 'Aucune donnée disponible pour cette semaine'})
-
-
-def registerGrossesse(self,request):
-    grosse = Grossesse.objects.filter(user_id=request.user.id, is_active=True).first()
-    if not grosse:
-        if request.method in ( 'POST','OPTIONS'):
-            form = GrossesseForm(request.POST)
-            if form.is_valid():
-                grossesse = form.save(commit=False)
-                grossesse.user_id = request.user
-                grossesse.save()
-                return JsonResponse({'success': True, 'date_accouchement': grossesse.end_date})
-            else:
-                return JsonResponse({'success': False, 'errors': form.errors})
-        else:
-            form = GrossesseForm()
-        content = {
-            'user_id': request.user.id,
-            'form': form,
-        }
-        return JsonResponse({'success':'affichage de la grossesse'})
-    return JsonResponse({'success': False, 'message': 'Grossesse déjà enregistrée'})
-
-class RegisterGrossesseView(views.APIView):
-    def post(self, request):
-        user = User.objects.filter(id=request.user.id).first()
-        if user:
-            grossesse = Grossesse.objects.filter(user_id=user.id, is_active=True).first()
-            if not grossesse:
-                form = GrossesseForm(request.data)
-                if form.is_valid():
-                    grossesse = form.save(commit=False)
-                    grossesse.user_id = user
-                    grossesse.save()
-                    return Response({'success': True, 'date_accouchement': grossesse.end_date}, status=status.HTTP_200_OK)
-                else:
-                    return Response({'success': False, 'errors': form.errors}, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                return Response({'success': False, 'message': 'Grossesse déjà enregistrée'}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response({'error': 'Invalid user'}, status=status.HTTP_400_BAD_REQUEST)
-        
-    
-    def put(self, request, grossesse_id):
-        grossesse = get_object_or_404(Grossesse, id=grossesse_id, user_id=request.user.id)
-        form = GrossesseForm(request.data, instance=grossesse)
-        if form.is_valid():
-            form.save()  # This updates the existing `grossesse` instance
-            return Response({'success': True, 'message': 'Grossesse updated successfully'}, status=status.HTTP_200_OK)
-        else:
-            return Response({'success': False, 'errors': form.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
 # reccuperer la semaine courantge de la grossesse
