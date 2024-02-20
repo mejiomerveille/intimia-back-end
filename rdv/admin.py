@@ -2,6 +2,6 @@ from django.contrib import admin
 
 # Register your models here.
 
-from .models import RDV
+from .models import RendezVous
 
-admin.site.register(RDV)
+admin.site.register(RendezVous)

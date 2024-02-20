@@ -7,7 +7,7 @@ from .envoi import send_mail_for_doctor
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from rest_framework.decorators import api_view
-from .models import RDV as Appointment  
+from .models import RendezVous as Appointment  
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -22,8 +22,11 @@ class DV(APIView):
             if form.is_valid():
                 appointment = form.save(commit=False)
                 id = request.data.get('grossesse_id')
+                appointment.user = request.user  
                 grossesse = get_object_or_404(Grossesse, id=id)
                 appointment.grossesse = grossesse
+                print(appointment.user)
+                print(appointment.grossesse)
                 appointment.save()
                 # Envoyer un e-mail au médecin
                 send_mail_for_doctor(user_name=request.user.username, email=appointment.email, date=appointment.date.strftime("%d-%m-%y"), rdv_name=appointment.name, heure=appointment.time)
@@ -34,6 +37,7 @@ class DV(APIView):
             else:
                 print(form)
         else:
+            print(request.user)
             form = AppointmentForm(request.data)
         content = {
             'user_id': request.user.id,

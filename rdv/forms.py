@@ -1,5 +1,5 @@
 from django import forms
-from .models import RDV as Appointment,Doctor
+from .models import RendezVous as Appointment,Doctor
 
 
 class AppointmentForm(forms.ModelForm):
