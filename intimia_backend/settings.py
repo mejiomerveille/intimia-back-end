@@ -31,7 +31,18 @@ ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = ['http://localhost:3000']
 CORS_COOKIE_SECURE=True
 CORS_COOKIE_HTTPONLY=True
-
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_DOMAIN = None
+CSRF_COOKIE_DOMAIN = 'mydomain.ir'
+if os.environ.get("IS_SERVER", "False") == "True":
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+ALLOWED_HOSTS = ["*"]
+SESSION_COOKIE_HTTPONLY = False
+CORS_ORIGIN_ALLOW_ALL = True
+CSRF_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SAMESITE = 'None'
+CSRF_HEADER_NAMES = ('HTTP_X_CSRFTOKEN',) 
 
 CORS_ORIGIN_ALLW_ALL = True
 
@@ -68,6 +79,8 @@ INSTALLED_APPS = [
     'notifications',
     'channels',
     'symptoms',
+    'chatbot',
+
 ]
 
 SITE_ID = 1

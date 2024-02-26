@@ -18,6 +18,11 @@ class Grossesse(models.Model):
     user=models.ForeignKey(User,on_delete=models.CASCADE)
     is_active=models.BooleanField(default=True)
     is_finish=models.BooleanField(default=False)
+    create_at=models.DateField(auto_now_add=True)
+    create_by=models.ForeignKey(User,on_delete=models.CASCADE,related_name="create_by",default=None,null=True)
+    modify_at=models.DateField(auto_now_add=True)
+    modify_by=models.ForeignKey(User,on_delete=models.CASCADE,related_name="modify_by",default=None,null=True)
+
 
     def __str__(self):
         return f"Grossesse {self.start_date} - {self.end_date}"

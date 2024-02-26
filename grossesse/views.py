@@ -26,7 +26,6 @@ class Grossesse(APIView):
                     grossesse = form.save(commit=False)
                     grossesse.user = request.user  
                     grossesse.save()
-                    
                     data ={
                         ';essage':"grossesse enregistree avec succes", 
                         'date_accouchement': grossesse.end_date

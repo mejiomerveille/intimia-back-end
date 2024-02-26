@@ -33,6 +33,8 @@ urlpatterns = [
     path('api/v1/rdv/', include('rdv.urls')),
     path('api/v1/symptoms/', include('symptoms.urls')),
     path('api/v1/notifications/', include('notifications.urls')),
+    path('api/v1/chatbot/', include('chatbot.urls')),
+
 
 
 

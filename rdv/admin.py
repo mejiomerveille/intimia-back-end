@@ -1,7 +1,5 @@
 from django.contrib import admin
-
-# Register your models here.
-
-from .models import RendezVous
+from .models import *
 
 admin.site.register(RendezVous)
+admin.site.register(Medecin)

@@ -1,6 +1,22 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from pyfcm import FCMNotification
+from django.db.models.signals import pre_save
+from .models import RendezVous
+from datetime import datetime
+from user_module.models import CustomUser
+from django.http import request
+
+@receiver(pre_save,sender=RendezVous)
+def add_rdv(sender,instance:RendezVous,**kwargs):
+    print("presave create_by")
+    if instance.create_by is not None:
+        instance.modify_at=datetime.now()
+        instance.modify_by=request.user_id
+    else:
+        instance.create_at=datetime.now()
+        instance.create_by=CustomUser.objects.filter(id)
+
 
 @receiver(post_save, sender="Intimia")
 def send_notification(sender, instance, created, **kwargs):

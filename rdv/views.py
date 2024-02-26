@@ -1,31 +1,54 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from .forms import AppointmentForm,UploadFileForm
+from .forms import AppointmentForm
 from grossesse.models import Grossesse
-from django.contrib.auth.models import User
-from django.shortcuts import render
 from .envoi import send_mail_for_doctor
 from django.http import JsonResponse
-from django.shortcuts import render, redirect
-from rest_framework.decorators import api_view
 from .models import RendezVous as Appointment  
 from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
 from django.http import JsonResponse
+from .models import Medecin
+from rest_framework.response import Response
+from rest_framework import status
+from .serializers import MedecinSerializer
+
+class MedecinAPIView(APIView):
+    def post(self, request):
+        serializer = MedecinSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+def get_all_medecins(request):
+    medecins = Medecin.objects.all().values()
+    return JsonResponse(list(medecins), safe=False)
 
 
 class DV(APIView):
-    # @api_view(['POST'])
+
+    def messageGrossesse(self,statut,message:str|None=None,data:list|None=None):
+        rowcount = 0 if data is None else len(data)
+        return_object ={
+            "statut":statut,
+            "message":message,
+            "data":data,
+            "r":rowcount
+        }
+        return JsonResponse(return_object)
+    
     def post(self,request):
         if request.method == 'POST':
             form = AppointmentForm(request.data)
             if form.is_valid():
+
+                user_id=request.user.pk
                 appointment = form.save(commit=False)
                 id = request.data.get('grossesse_id')
                 appointment.user = request.user  
-                grossesse = get_object_or_404(Grossesse, id=id)
+                grossesse = Grossesse.objects.filter(user_id=user_id).first() or None
+                if(grossesse is None):
+                    return self.messageGrossesse("error","Grossesse inaccesible Contact administrateur")
                 appointment.grossesse = grossesse
-                print(appointment.user)
+                print(appointment.user.id)
                 print(appointment.grossesse)
                 appointment.save()
                 # Envoyer un e-mail au médecin
@@ -46,7 +69,6 @@ class DV(APIView):
         return JsonResponse('Une erreur est survenue', status=400, safe=False)
 
 
-    # @api_view(['GET'])
     def get(self,request):
         user = request.user
         appointments = Appointment.objects.all()
