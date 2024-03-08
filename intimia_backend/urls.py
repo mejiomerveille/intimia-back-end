@@ -34,6 +34,7 @@ urlpatterns = [
     path('api/v1/symptoms/', include('symptoms.urls')),
     path('api/v1/notifications/', include('notifications.urls')),
     path('api/v1/chatbot/', include('chatbot.urls')),
+    path('api/v1/notes/', include('notes.urls')),
 
 
 

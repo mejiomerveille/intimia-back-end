@@ -1,11 +1,8 @@
 from django.http import JsonResponse
-from rest_framework import views,status
-from grossesse.models import Grossesse
-from rest_framework.response import Response
 from datetime import datetime
 from django.shortcuts import render, get_object_or_404,redirect
 from user_module.models import CustomUser as User
-from grossesse.models import Grossesse
+from .models.models import Grossesse
 from .forms import GrossesseForm
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -13,10 +10,9 @@ from .models import InformationGrossesse as InfoGrossesse
 from django.views import View
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
 from .serializer import *
 
-class Grossesse(APIView):
+class Grossesses(APIView):
     permission_classes = (AllowAny,)
     # serializer_class = GrossesseSerializer
     def post(self,request):
@@ -51,32 +47,31 @@ class SemaineView(View):
         except InfoGrossesse.DoesNotExist:
             return JsonResponse({"error": "Semaine not found"}, status=404)
 
-def current_week(request, current_week):
-    try:
-        info_grossesse = InfoGrossesse.objects.get(semaine__num_semaine=current_week)
-        semaine_data = info_grossesse.semaine
-        return JsonResponse(semaine_data)
-    except InfoGrossesse.DoesNotExist:
-        return JsonResponse({'message': 'Aucune donnée disponible pour cette semaine'})
+# def current_week(request, current_week):
+#     try:
+#         info_grossesse = InfoGrossesse.objects.get(semaine__num_semaine=current_week)
+#         semaine_data = info_grossesse.semaine
+#         return JsonResponse(semaine_data)
+#     except InfoGrossesse.DoesNotExist:
+#         return JsonResponse({'message': 'Aucune donnée disponible pour cette semaine'})
 
 
 # reccuperer la semaine courantge de la grossesse
  
-# def current_week(request):
-#     # user: User = request.user
-#     user_id : User= request.user.id
-#     grossesse = Grossesse.objects.filter(user_id=1, is_active=True).first()
-#     print(grossesse)    
-#     if  grossesse:
-#         start_date = grossesse.start_date
-#         current_date = datetime.now().date()
-#         weeks = (current_date - start_date).days // 7 +1
-        
-#         return JsonResponse({'week': weeks})
-    
-#     return JsonResponse({'week': None})
+def current_week(request):
+    # user: User = request.user
+    user_id : User= request.user.pk
+    grossesse = Grossesse.objects.filter(user_id=user_id).first() or None
+    print(grossesse)    
+    print(request.user)    
+    if  grossesse:
+        start_date = grossesse.start_date
+        current_date = datetime.now().date()
+        weeks = (current_date - start_date).days // 7 +1
+        return JsonResponse({'week': weeks})
+    return JsonResponse({'week': None})
 
-
+# mejiomerveille@gmail.com
 # Modifier une grossesse
 
 def modifier_grossesse(request, grossesse_id):
