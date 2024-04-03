@@ -16,14 +16,13 @@ class Medecin(models.Model):
     modify_by=models.ForeignKey(CustomUser,on_delete=models.CASCADE,related_name="modifie_par",default=None,null=True)
 
 
-# mervcodemerveille
+# essai
 class RendezVous(models.Model):
     grossesse = models.ForeignKey(Grossesse, on_delete=models.CASCADE)
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     doctor = models.ForeignKey(Medecin, default=None,on_delete=models.CASCADE)
     date = models.DateField()
     time = models.TimeField()
-    weight = models.IntegerField()
     reminder = models.BooleanField()
     notes = models.TextField(blank=True)
     file = models.FileField(blank=True,default="null")

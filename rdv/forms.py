@@ -7,7 +7,7 @@ class AppointmentForm(forms.ModelForm):
     time = forms.TimeField(widget=forms.TimeInput(attrs={'type': 'time'}))
     class Meta:
         model = Appointment
-        fields = ['date', 'time', 'weight', 'reminder', 'notes']
+        fields = ['grossesse','doctor','date', 'time', 'reminder', 'notes']
 
     
 

@@ -2,25 +2,54 @@ from .forms import AppointmentForm
 from grossesse.models import Grossesse
 from .envoi import send_mail_for_doctor
 from django.http import JsonResponse
-from .models import RendezVous as Appointment  
 from rest_framework.views import APIView
 from django.http import JsonResponse
-from .models import Medecin
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import MedecinSerializer
+from .models import RendezVous as Appointment
+from .models import Medecin
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view,permission_classes
+from django.http import Http404
 
-class MedecinAPIView(APIView):
-    def post(self, request):
-        serializer = MedecinSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+def messagedv(statut,message:str|None=None,data:list|None=None):
+        rowcount = 0 if data is None else len(data)
+        return_object ={
+            "statut":statut,
+            "message":message,
+            "data":data,
+            "r":rowcount
+        }
+        return JsonResponse(return_object)
 
-def get_all_medecins(request):
-    medecins = Medecin.objects.all().values()
-    return JsonResponse(list(medecins), safe=False)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])           
+def get(request):
+    user_id = request.user.id
+    appointment = Appointment.objects.filter(user=user_id).values('id','user__username','doctor__name','doctor__profession', 'date','time') or None 
+    if appointment is None:
+        return messagedv("error","Vous n'avez pas encore enregistré de rendez vous")
+    return messagedv(statut="success",data=list(appointment))
+
+
+@permission_classes([IsAuthenticated])           
+@api_view(['DELETE'])   
+def delete(request, pk):
+    user_id = request.user.id
+    try:
+        appointment = Appointment.objects.get(pk=pk)
+    except Appointment.DoesNotExist:
+        raise Http404
+
+    if appointment.user != appointment.user:
+        print(appointment.user)
+        print(request.user.id)
+        return JsonResponse({"message": "Vous n'êtes pas autorisé à supprimer ce rendez-vous."}, status=403, safe=False)
+
+    appointment.delete()
+    return JsonResponse({"message": "Rendez-vous supprimé avec succès."}, safe=False)
+
 
 
 class DV(APIView):
@@ -44,6 +73,8 @@ class DV(APIView):
                 appointment = form.save(commit=False)
                 id = request.data.get('grossesse_id')
                 appointment.user = request.user  
+                appointment.modify_by = request.user  
+                appointment.create_by = request.user  
                 grossesse = Grossesse.objects.filter(user_id=user_id).first() or None
                 if(grossesse is None):
                     return self.messageGrossesse("error","Grossesse inaccesible Contact administrateur")
@@ -52,7 +83,7 @@ class DV(APIView):
                 print(appointment.grossesse)
                 appointment.save()
                 # Envoyer un e-mail au médecin
-                send_mail_for_doctor(user_name=request.user.username, email=appointment.email, date=appointment.date.strftime("%d-%m-%y"), rdv_name=appointment.name, heure=appointment.time)
+                send_mail_for_doctor(user_name=request.user.username, email=appointment.doctor.email, date=appointment.date.strftime("%d-%m-%y"), rdv_name=appointment.doctor.name, heure=appointment.time)
                 data = {
                     'message': "Rendez-vous enregistré avec succès",
                 }
@@ -67,67 +98,36 @@ class DV(APIView):
             'form': form,
         }
         return JsonResponse('Une erreur est survenue', status=400, safe=False)
-
-
-    def get(self,request):
-        user = request.user
-        appointments = Appointment.objects.all()
-        # symptom = Grossesse.objects.get(id)
-        # print(symptom)
-        events = []
-        for appointment in appointments:
-            event = {
-                'title': appointment.name,
-                'time': appointment.time,
-                'start': appointment.date.strftime('%Y-%m-%d'),
-                'message': "Vous avez rendez-vous le:",
-                'profession': appointment.profession,
-            }
-            events.append(event)
-
-        return Response(events)
-
-# def upload_file(request,appointment_id=None):
-#     if request.method == "POST":
-#         form_file = UploadFileForm(request.POST, request.FILES)
-#         if form_file.is_valid():
-#             # file = request.FILES["file"]
-#             # handle_uploaded_file(file)
-#             rdv = Appointment.objects.get(id=appointment_id) 
-#             rdv.file = request.FILES['file']
-#             rdv.file_name = request.POST['title']
-#             rdv.save()
-#             return redirect('list-rdv')
-#     return render(request, "rdv/home.html", {"form_file": form_file, "appointment": rdv})
-
-
     
+    def put(self, request, pk):
+        try:
+            appointment = Appointment.objects.filter(pk=pk)
+        except Appointment.DoesNotExist:
+            raise Http404
 
+        # if appointment.user != appointment.user:
+        #     return JsonResponse({"message": "Vous n'êtes pas autorisé à modifier ce rendez-vous."}, status=403, safe=False)
 
+        form = AppointmentForm(request.data, instance=appointment)
+        if form.is_valid():
+            appointment = form.save(commit=False)
+            appointment.modify_by = request.user
+            appointment.save()
+            return JsonResponse("Rendez-vous modifié avec succès.", safe=False)
+        else:
+            return JsonResponse(form.errors, status=400)
         
 
-# def edit_appointment(request, appointment_id):
-#     appointment = get_object_or_404(Appointment, id=appointment_id)
 
-#     if request.method == 'POST':
-#         appointment_form = AppointmentForm(request.POST, instance=appointment)
-#         doctor_form = DoctorForm(request.POST, instance=appointment.doctor)
-#         if appointment_form.is_valid() and doctor_form.is_valid():
-#             appointment = appointment_form.save()
-#             doctor = doctor_form.save()
-#             appointment.doctor = doctor
-#             appointment.save()
-#             return redirect('list-rdv')
-#     else:
-#         appointment_form = AppointmentForm(instance=appointment)
-#         doctor_form = DoctorForm(instance=appointment.doctor)
 
-#     return render(request, 'rdv/edit_appointment.html', {'appointment_form': appointment_form, 'doctor_form': doctor_form})
+class MedecinAPIView(APIView):
+    def post(self, request):
+        serializer = MedecinSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# def delete_appointment(request, appointment_id):
-#     appointment = get_object_or_404(Appointment, id=appointment_id)
-#     if request.method == 'POST':
-#         appointment.delete()
-#         return redirect('list-rdv')
-
-#     return render(request, 'rdv/delete_appointment.html', {'appointment': appointment})
+def get_all_medecins(request):
+    medecins = Medecin.objects.all().values()
+    return JsonResponse(list(medecins), safe=False)

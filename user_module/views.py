@@ -9,7 +9,6 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view,permission_classes
 from rest_framework.permissions import IsAuthenticated
 
-
 class MyObtainTokenPairView(TokenObtainPairView):
     permission_classes = (AllowAny,)
     serializer_class = MyTokenObtainPairSerializer
@@ -44,15 +43,3 @@ class LogoutView(views.APIView):
         print(RegisterSerializer(request.user))
         # request.user.auth_token.delete()
         return Response({'detail': 'Logged out successfully.'}, status=status.HTTP_200_OK)
-
-
-
-# #api/notes
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-# def getNotes(request):
-#     public_notes = Note.objects.filter(is_public=True).order_by('-updated')[:10]
-#     user_notes = request.user.notes.all().order_by('-updated')[:10]
-#     notes = public_notes | user_notes
-#     serializer = NoteSerializer(notes, many=True)
-#     return Response(serializer.data)

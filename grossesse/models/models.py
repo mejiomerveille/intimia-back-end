@@ -3,6 +3,7 @@ from django.db import models
 # Create your models here.
 from user_module.models import CustomUser as User
 import datetime
+from forfait.models import Forfait
 
 class InformationGrossesse(models.Model):
     semaine = models.JSONField(primary_key=True)
@@ -22,6 +23,8 @@ class Grossesse(models.Model):
     create_by=models.ForeignKey(User,on_delete=models.CASCADE,related_name="create_by",default=None,null=True)
     modify_at=models.DateField(auto_now_add=True)
     modify_by=models.ForeignKey(User,on_delete=models.CASCADE,related_name="modify_by",default=None,null=True)
+    grossesse_forfait =models.ForeignKey(Forfait,on_delete=models.CASCADE,default=None,null=True)
+
 
 
     def __str__(self):

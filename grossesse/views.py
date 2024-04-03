@@ -11,10 +11,20 @@ from django.views import View
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 from .serializer import *
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view,permission_classes
+
+def messageGrossesse(statut,message:str|None=None,data:list|None=None):
+        rowcount = 0 if data is None else len(data)
+        return_object ={
+            "statut":statut,
+            "message":message,
+            "data":data,
+            "r":rowcount
+        }
+        return JsonResponse(return_object)
 
 class Grossesses(APIView):
-    permission_classes = (AllowAny,)
-    # serializer_class = GrossesseSerializer
     def post(self,request):
             if request.method == 'POST':
                 form = GrossesseForm(request.data)
@@ -31,10 +41,6 @@ class Grossesses(APIView):
                     print(form)
             else:
                 form = GrossesseForm()
-            content = {
-                'user_id': request.user.id,
-                'form': form,
-            }
             return JsonResponse('Une erreur est subvenue')
 
 
@@ -46,22 +52,39 @@ class SemaineView(View):
             return JsonResponse(semaine_data)
         except InfoGrossesse.DoesNotExist:
             return JsonResponse({"error": "Semaine not found"}, status=404)
+        
 
-# def current_week(request, current_week):
-#     try:
-#         info_grossesse = InfoGrossesse.objects.get(semaine__num_semaine=current_week)
-#         semaine_data = info_grossesse.semaine
-#         return JsonResponse(semaine_data)
-#     except InfoGrossesse.DoesNotExist:
-#         return JsonResponse({'message': 'Aucune donnée disponible pour cette semaine'})
+class weekView(View):
+    def get(self, request, id_grossesse):
+        try:
+            info_grossesse = InfoGrossesse.objects.filter(pk=id_grossesse)
+            start_date = info_grossesse.start_date 
+            current_date = datetime.now().date()
+            weeks = (current_date - start_date).days // 7 +1
+            return JsonResponse(weeks)
+        except InfoGrossesse.DoesNotExist:
+            return JsonResponse({"error": "week not found"}, status=404)
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])  
+def get_all_grossesse(request):
+    user: User = request.user
+    # print(user.id)
+    grossesse = Grossesse.objects.filter(user_id=user.id, is_active=True).values('id', 'start_date', 'end_date', 'create_by_id__username', 'user_id__username')
+    # print(grossesse)
+    if grossesse is not None:
+        return messageGrossesse(statut="success",data=list(grossesse))
+    return messageGrossesse("error","Grossesse inaccesible Contact administrateur")
+    
 
-# reccuperer la semaine courantge de la grossesse
  
-def current_week(request):
-    # user: User = request.user
+@api_view(['GET'])
+@permission_classes([IsAuthenticated]) 
+def current_week(request,id_grossesse:None):
     user_id : User= request.user.pk
-    grossesse = Grossesse.objects.filter(user_id=user_id).first() or None
+    pk=id_grossesse 
+    g = Grossesse.objects.filter(user_id=user_id ).first()
+    grossesse=g.filter(pk=id_grossesse).first() if id_grossesse is not None else g.first()
     print(grossesse)    
     print(request.user)    
     if  grossesse:
@@ -91,6 +114,9 @@ def modifier_grossesse(request, grossesse_id):
         return render(request, 'grossesse/modifier_grossesse.html', content,)
 
 
+ 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated]) 
 def principal(request):
     grosse: Grossesse = Grossesse.objects.filter(user_id=request.user.id, is_active=True).first()
     if(grosse):
@@ -107,8 +133,8 @@ def principal(request):
             # notes = Note.objects.all()
             # print(notes[0].titre, notes[0].objet)
 
-            return render(request, 'grossesse/cadre.html',{'n':list_weeks, 'start_week': date_diff })
-    return render(request,'app/404.html')
+            return JsonResponse({'start_week': date_diff })
+    return JsonResponse('erreur')
     # mervcodemerveille
     # essai
 def grossesse_list(request):

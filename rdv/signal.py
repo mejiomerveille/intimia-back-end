@@ -12,10 +12,10 @@ def add_rdv(sender,instance:RendezVous,**kwargs):
     print("presave create_by")
     if instance.create_by is not None:
         instance.modify_at=datetime.now()
-        instance.modify_by=request.user_id
+        # instance.modify_by=request.user_id
     else:
         instance.create_at=datetime.now()
-        instance.create_by=CustomUser.objects.filter(id)
+        # instance.create_by=CustomUser.objects.filter(id)
 
 
 @receiver(pre_save,sender=Medecin)
@@ -23,10 +23,10 @@ def add_medecin(sender,instance:Medecin,**kwargs):
     print("presave create_by")
     if instance.create_by is not None:
         instance.modify_at=datetime.now()
-        instance.modify_by=request.user_id
+        # instance.modify_by=request.user_id
     else:
         instance.create_at=datetime.now()
-        instance.create_by=Medecin.objects.filter(id)
+        # instance.create_by=Medecin.objects.filter(id)
 
 
 @receiver(post_save, sender="Intimia")

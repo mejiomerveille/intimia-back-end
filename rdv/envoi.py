@@ -1,6 +1,7 @@
 import smtplib
 from email.message import EmailMessage
-
+# essai
+# mervcodemerveille
 def send_mail_for_doctor(user_name,email,date,rdv_name,heure):
     gmail_cfg =  {
         "server" : "smtp.gmail.com",
@@ -13,7 +14,7 @@ def send_mail_for_doctor(user_name,email,date,rdv_name,heure):
     msg["to"] = email
     msg["from"] = gmail_cfg["email"]
     msg["subject"] = "Rendez-vous medical"
-    msg.set_content(f"Vous avez rendez le {date} avec : {user_name} pour une {rdv_name} a {heure}")
+    msg.set_content(f"{rdv_name} un rendez-vous avec {user_name} a ete enregistre pour le : {date} a {heure}")
 
     with smtplib.SMTP_SSL(gmail_cfg["server"], gmail_cfg["port"]) as smtp:
         smtp.login(gmail_cfg["email"], gmail_cfg["pwd"])

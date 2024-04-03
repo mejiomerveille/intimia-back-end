@@ -1,7 +1,7 @@
 from django import forms
-from .models import Note
+from .models import Notes
 
 class NoteForm(forms.ModelForm):
     class Meta:
-        model = Note
-        exclude = ['user']
+        model = Notes
+        fields = ['grossesse','title','content']

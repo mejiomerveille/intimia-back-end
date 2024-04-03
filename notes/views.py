@@ -1,33 +1,44 @@
-from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 import json
-from .models import Note
+from .models import Notes
 from .forms import NoteForm
-from django.contrib.auth.decorators import login_required
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view,permission_classes
 
+ 
+def messageGrossesse(statut,message:str|None=None,data:list|None=None):
+        rowcount = 0 if data is None else len(data)
+        return_object ={
+            "statut":statut,
+            "message":message,
+            "data":data,
+            "r":rowcount
+        }
+        return JsonResponse(return_object)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])   
 def create_note(request):
     if request.method == 'POST':
-        data = json.loads(request.body)
-        title = data.get('title', '')
-        content = data.get('content', '')
-        image = data.get('image', '')
-        user = request.user
-        print(user)
-        note = Note.objects.create(title=title, content=content, image=image, user=user)
-        return JsonResponse({'note_id': note.id})
-    return JsonResponse({'error': 'Invalid request method'})
-# def create_note(request):
-#     if request.method == 'POST':
-#         form = NoteForm(request.POST, request.FILES)
-#         if form.is_valid():
-#             note = form.save(commit=False)
-#             note.user = request.user
-#             note.save()
-#             return JsonResponse({'note_id': note.id})
-#     else:
-#         form = NoteForm()
-#     return JsonResponse({'error': 'Invalid request method'})
+        print(request.user)
+        form = NoteForm(request.data)
+        if form.is_valid():
+            note=form.save(commit=False)
+            note.user=request.user
+            note.save()
+            print(note)
+            data ={
+                    'message':"note enregistree avec succes" 
+                }
+            return JsonResponse(data)
+        else:
+             print(form)
+    else:
+        form = NoteForm()
+    return JsonResponse('Une erreur est subvenue')
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])   
 def get_notes(request):
-    notes = Note.objects.all().values()
+    notes = Notes.objects.all().values()
     return JsonResponse(list(notes), safe=False)

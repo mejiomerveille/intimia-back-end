@@ -1,5 +1,6 @@
 from django.db import models
 from django.db.models.fields.related import ForeignKey
+from forfait.models import Forfait
 
 class Author(models.Model):
     nom = models.CharField(max_length=50)
@@ -21,6 +22,8 @@ class CreateBlog(models.Model):
     author = models.ForeignKey(Author, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     semaine = models.IntegerField(default=0)
+    blog_forfait =models.ForeignKey(Forfait,on_delete=models.CASCADE,default=None,null=True)
+
 
 
     def __str__(self):
